@@ -1,0 +1,164 @@
+// Program.cs
+using TodoApi;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// 🔹 Connection string
+builder.Services.AddDbContext<ToDoDbContext>(options =>
+    options.UseMySql(builder.Configuration.GetConnectionString("ToDoDB"),
+    new MySqlServerVersion(new Version(8, 0, 33))));
+
+// 🔹 CORS
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+// 🔹 Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// 🔹 JWT Authentication
+var key = "ThisIsASuperLongSecretKeyForJWT12345!";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = "Bearer";
+    options.DefaultChallengeScheme = "Bearer";
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+    };
+});
+
+builder.Services.AddAuthorization();
+
+var app = builder.Build();
+
+// 🔹 Middleware
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseCors();
+app.UseAuthentication();  // חייב לפני UseAuthorization
+app.UseAuthorization();
+
+// 🔹 Endpoints Tasks
+app.MapGet("/tasks", async (ToDoDbContext db, ClaimsPrincipal userClaims) =>
+{
+    var userIdClaim = userClaims.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+    if (userIdClaim == null) return Results.Unauthorized();
+
+    var userId = int.Parse(userIdClaim.Value);
+    var tasks = await db.Items.Where(t => t.UserId == userId).ToListAsync();
+    return Results.Ok(tasks);
+}).RequireAuthorization();
+
+app.MapPost("/tasks", async (ToDoDbContext db, Item newItem, ClaimsPrincipal userClaims) =>
+{
+    var userIdClaim = userClaims.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+    if (userIdClaim == null) return Results.Unauthorized();
+
+    newItem.UserId = int.Parse(userIdClaim.Value);
+    db.Items.Add(newItem);
+    await db.SaveChangesAsync();
+    return Results.Created($"/tasks/{newItem.Id}", newItem);
+}).RequireAuthorization();
+
+app.MapPut("/tasks/{id}", async (int id, ToDoDbContext db, Item updatedItem, ClaimsPrincipal userClaims) =>
+{
+    var userIdClaim = userClaims.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+    if (userIdClaim == null) return Results.Unauthorized();
+
+    var userId = int.Parse(userIdClaim.Value);
+    var item = await db.Items.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+    if (item == null) return Results.NotFound();
+
+    item.Name = updatedItem.Name;
+    item.IsComplete = updatedItem.IsComplete;
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+}).RequireAuthorization();
+
+app.MapDelete("/tasks/{id}", async (int id, ToDoDbContext db, ClaimsPrincipal userClaims) =>
+{
+    var userIdClaim = userClaims.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+    if (userIdClaim == null) return Results.Unauthorized();
+
+    var userId = int.Parse(userIdClaim.Value);
+    var item = await db.Items.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
+    if (item == null) return Results.NotFound();
+
+    db.Items.Remove(item);
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+}).RequireAuthorization();
+
+// 🔹 JWT Helper
+string GenerateJwtToken(string username, int userId)
+{
+    var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+    var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+    var claims = new[]
+    {
+        new Claim(ClaimTypes.Name, username),
+        new Claim(ClaimTypes.NameIdentifier, userId.ToString()) // חובה כדי להפיק userId
+    };
+
+    var token = new JwtSecurityToken(
+        claims: claims,
+        expires: DateTime.Now.AddHours(1),
+        signingCredentials: credentials);
+
+    return new JwtSecurityTokenHandler().WriteToken(token);
+}
+
+// 🔹 Endpoints Users
+
+// Register
+app.MapPost("/register", async (ToDoDbContext db, User user) =>
+{
+    var existingUser = await db.Users.FirstOrDefaultAsync(u => u.Username == user.Username);
+    if (existingUser != null)
+        return Results.BadRequest(new { message = "שם המשתמש כבר קיים במערכת" });
+
+    db.Users.Add(user);
+    await db.SaveChangesAsync();
+
+    var token = GenerateJwtToken(user.Username, user.Id);
+    return Results.Ok(new { token });
+});
+
+// Login
+app.MapPost("/login", async (ToDoDbContext db, User loginUser) =>
+{
+    var user = await db.Users.FirstOrDefaultAsync(u =>
+        u.Username == loginUser.Username && u.Password == loginUser.Password);
+
+    if (user == null) return Results.Unauthorized();
+
+    var token = GenerateJwtToken(user.Username, user.Id);
+    return Results.Ok(new { token });
+});
+
+app.Run();
