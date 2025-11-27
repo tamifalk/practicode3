@@ -32,25 +32,85 @@ function Register({ onLogin }) {
   }
 
   return (
-    <div>
-      <h2>Register</h2>
-      <form onSubmit={handleRegister}>
-        <input
-          placeholder="Username"
-          onChange={(e) => setUsername(e.target.value)}
-          value={username}
-        />
-        <input
-          placeholder="Password"
-          type="password"
-          onChange={(e) => setPassword(e.target.value)}
-          value={password}
-        />
-        <button type="submit">Register</button>
-      </form>
-      <p>
-        Already have an account? <Link to="/login">Login here</Link>
-      </p>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        backgroundColor: "#f0f2f5",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: "#fff",
+          padding: "2rem",
+          borderRadius: "8px",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          width: "100%",
+          maxWidth: "400px",
+        }}
+      >
+        <h2 style={{ textAlign: "center", color: "#333" }}>Register</h2>
+        <form
+          onSubmit={handleRegister}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "1rem",
+          }}
+        >
+          <input
+            placeholder="Username"
+            onChange={(e) => setUsername(e.target.value)}
+            value={username}
+            style={{
+              padding: "0.75rem",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              fontSize: "1rem",
+            }}
+          />
+          <input
+            placeholder="Password"
+            type="password"
+            onChange={(e) => setPassword(e.target.value)}
+            value={password}
+            style={{
+              padding: "0.75rem",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              fontSize: "1rem",
+            }}
+          />
+          <button
+            type="submit"
+            style={{
+              padding: "0.75rem",
+              backgroundColor: "#4CAF50",
+              color: "#fff",
+              border: "none",
+              borderRadius: "4px",
+              fontSize: "1rem",
+              cursor: "pointer",
+            }}
+          >
+            Register
+          </button>
+        </form>
+        <p
+          style={{
+            textAlign: "center",
+            marginTop: "1rem",
+          }}
+        >
+          Already have an account?{" "}
+          <Link to="/login" style={{ color: "#007BFF" }}>
+            Login here
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

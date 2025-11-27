@@ -66,10 +66,28 @@ function TodoPage() {
 
   return (
     <section className="todoapp">
+      <button
+        onClick={logout}
+        style={{
+          position: 'fixed',
+          top: '10px',
+          right: '10px',
+          padding: '0.5rem 1rem',
+          backgroundColor: '#ff4d4d',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '4px',
+          fontSize: '1rem',
+          cursor: 'pointer',
+          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+          zIndex: 1000
+        }}
+      >
+        Logout
+      </button>
       <header className="header">
         <h1>todos</h1>
-        <button onClick={logout} style={{ float: "right" }}>Logout</button>
-        <form onSubmit={createTodo}>
+        <form onSubmit={createTodo} style={{ marginTop: '2rem' }}>
           <input
             className="new-todo"
             placeholder="Well, let's take on the day"
@@ -78,7 +96,7 @@ function TodoPage() {
           />
         </form>
       </header>
-      <section className="main" style={{ display: "block" }}>
+      <section className="main" style={{ display: 'block' }}>
         <ul className="todo-list">
           {todos.map(todo => (
             <li className={todo.isComplete ? "completed" : ""} key={todo.id}>
