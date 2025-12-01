@@ -1,18 +1,24 @@
-# שלב build
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 WORKDIR /app
+EXPOSE 80
+EXPOSE 443
 
-# העתק קובצי csproj לתיקייה הראשית, כדי ל־restore קודם
-COPY *.csproj ./
-RUN dotnet restore
+ENV ASPNETCORE_URLS=http://+:80
 
-# העתק את כל הקוד ובנה את האפליקציה
-COPY . ./
-RUN dotnet publish -c Release -o out
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+ARG configuration=Release
+WORKDIR /src
+COPY ["TodoApi.csproj", "./"]
+RUN dotnet restore "TodoApi.csproj"
+COPY . .
+WORKDIR "/src/."
+RUN dotnet build "TodoApi.csproj" -c $configuration -o /app/build
 
-# שלב הרצה
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
+FROM build AS publish
+ARG configuration=Release
+RUN dotnet publish "TodoApi.csproj" -c $configuration -o /app/publish /p:UseAppHost=false
+
+FROM base AS final
 WORKDIR /app
-COPY --from=build /app/out .
-
+COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "TodoApi.dll"]
