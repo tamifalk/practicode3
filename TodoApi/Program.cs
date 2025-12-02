@@ -167,4 +167,5 @@ app.MapPost("/login", async (ToDoDbContext db, User loginUser) =>
     return Results.Ok(new { token });
 });
 
+app.MapGet("/", () => "API is running!");
 app.Run();
