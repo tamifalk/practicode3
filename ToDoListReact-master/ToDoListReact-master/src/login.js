@@ -11,7 +11,7 @@ function Login({ onLogin }) {
   async function handleLogin(e) {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5044/login", { username, password });
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/login`, { username, password });
       localStorage.setItem("token", res.data.token);
       onLogin();
       navigate("/"); // ✅ מפנה לדף הראשי

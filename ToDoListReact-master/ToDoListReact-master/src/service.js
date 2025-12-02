@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-axios.defaults.baseURL = "http://localhost:5044"; // ← כתובת השרת שלך
+axios.defaults.baseURL = "process.env.REACT_APP_API_URL"; // ← כתובת השרת שלך
 axios.defaults.headers.post["Content-Type"] = "application/json";
 
 // 🔹 Interceptors לניהול token ו־שגיאות

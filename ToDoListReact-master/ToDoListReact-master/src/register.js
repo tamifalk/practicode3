@@ -12,7 +12,7 @@ function Register({ onLogin }) {
     e.preventDefault();
     try {
       // שליחת בקשה לשרת — ודאי שהשרת שלך מאזין לנתיב הזה
-      const res = await axios.post("http://localhost:5044/register", {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/register`, {
         username,
         password,
       });
