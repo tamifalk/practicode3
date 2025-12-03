@@ -8,21 +8,23 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.WithOrigins("https://todolistclient-z3ou.onrender.com") // כתובת הקליינט שלך
+                                .AllowAnyHeader()
+                                .AllowAnyMethod();
+                      });
+});
+
 // 🔹 Connection string
 builder.Services.AddDbContext<ToDoDbContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("ToDoDB"),
     new MySqlServerVersion(new Version(8, 0, 33))));
-
-// 🔹 CORS
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
-});
 
 // 🔹 Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -30,7 +32,6 @@ builder.Services.AddSwaggerGen();
 
 // 🔹 JWT Authentication
 var key = "ThisIsASuperLongSecretKeyForJWT12345!";
-
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = "Bearer";
@@ -64,7 +65,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors();
+app.UseCors(MyAllowSpecificOrigins);
+
 app.UseAuthentication();  // חייב לפני UseAuthorization
 app.UseAuthorization();
 
