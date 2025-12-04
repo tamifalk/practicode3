@@ -6,7 +6,10 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddJsonFile("appsettings.Development.Local.json", optional: true);
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
@@ -15,7 +18,12 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("https://todolistclient-z3ou.onrender.com") // כתובת הקליינט שלך
+                          policy.WithOrigins(
+                            "https://todolistclient-z3ou.onrender.com",
+                            "http://localhost:5173",
+                            "http://localhost:3000",
+                             "http://localhost:3001"
+                          ) // כתובת הקליינט שלך
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();
                       });
@@ -31,7 +39,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // 🔹 JWT Authentication
-var key = "ThisIsASuperLongSecretKeyForJWT12345!";
+var key = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrEmpty(key))
+{
+    throw new Exception("JWT Key is missing! Make sure it exists in appsettings or environment variables.");
+}
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = "Bearer";
@@ -150,7 +163,7 @@ app.MapPost("/register", async (ToDoDbContext db, User user) =>
     {
         var existingUser = await db.Users.FirstOrDefaultAsync(u => u.Username == user.Username);
         if (existingUser != null)
-            return Results.BadRequest(new { message = "שם המשתמש כבר קיים במערכת" });
+            return Results.BadRequest(new { message = "Username already exists in the system" });
 
         db.Users.Add(user);
         await db.SaveChangesAsync();
