@@ -84,6 +84,8 @@ app.UseCors(MyAllowSpecificOrigins);
 app.UseAuthentication();  // חייב לפני UseAuthorization
 app.UseAuthorization();
 
+app.UseStaticFiles();
+
 // 🔹 Endpoints Tasks
 app.MapGet("/tasks", async (ToDoDbContext db, ClaimsPrincipal userClaims) =>
 {
@@ -192,5 +194,5 @@ app.MapPost("/login", async (ToDoDbContext db, User loginUser) =>
     return Results.Ok(new { token });
 });
 
-app.MapGet("/", () => "API is running!");
+app.MapFallbackToFile("index.html");
 app.Run();
