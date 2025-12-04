@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 axios.defaults.baseURL = process.env.REACT_APP_API_URL; 
+
 axios.defaults.headers.post["Content-Type"] = "application/json";
 
 axios.interceptors.request.use((config) => {
@@ -30,9 +31,9 @@ export default {
     const result = await axios.get("/tasks");
     // מחזירים תמיד אותיות גדולות
     return result.data.map(task => ({
-      Id: task.Id,
-      Name: task.Name,
-      IsComplete: task.IsComplete ?? false
+      Id: task.id,
+      Name: task.name,
+      IsComplete: task.isComplete ?? false
     }));
   },
 
@@ -42,10 +43,11 @@ export default {
       IsComplete: item.IsComplete ?? false
     });
     const data = result.data;
+     console.log("Added task response:", data);
     return {
-      Id: data.Id,
-      Name: data.Name,
-      IsComplete: data.IsComplete ?? false
+      Id: data.id,
+      Name: data.name,
+      IsComplete: data.isComplete ?? false
     };
   },
 

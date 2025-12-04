@@ -1,4 +1,3 @@
-// src/register.js
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -6,15 +5,24 @@ import axios from "axios";
 function Register({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState(""); // state חדש לשגיאות
   const navigate = useNavigate();
+
+  console.log("API URL:", process.env.REACT_APP_API_URL);
 
   async function handleRegister(e) {
     e.preventDefault();
+
+    // בדיקת תקינות בסיסית לסיסמה
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+
     try {
-      // שליחת בקשה לשרת — ודאי שהשרת שלך מאזין לנתיב הזה
       const res = await axios.post(`${process.env.REACT_APP_API_URL}/register`, {
-        username,
-        password,
+        Username: username,
+        Password: password,
       });
 
       // שמירת הטוקן
@@ -23,11 +31,20 @@ function Register({ onLogin }) {
       // עדכון ה־state באפליקציה
       onLogin();
 
+      // ניקוי הודעות שגיאה
+      setError("");
+
       // הפניה לדף הראשי
       navigate("/");
     } catch (err) {
       console.error("❌ Register failed:", err);
-      alert("Register failed, please try again");
+
+      // טיפול בשגיאות מהשרת
+      if (err.response && err.response.data?.message) {
+        setError(err.response.data.message); // לדוגמה: "Username already exists"
+      } else {
+        setError("Registration failed, please try again.");
+      }
     }
   }
 
@@ -99,6 +116,14 @@ function Register({ onLogin }) {
             Register
           </button>
         </form>
+
+        {/* הצגת הודעת שגיאה */}
+        {error && (
+          <p style={{ color: "red", marginTop: "1rem", textAlign: "center" }}>
+            {error}
+          </p>
+        )}
+
         <p
           style={{
             textAlign: "center",
