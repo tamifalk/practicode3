@@ -45,13 +45,12 @@ function TodoPage() {
 
   async function createTodo(e) {
     e.preventDefault();
-
     if (!newTodo.trim()) return;
 
-    const newItem = { name: newTodo }; // שולחים אובייקט עם שדה name
+    const newItem = { Name: newTodo, IsComplete: false };
     try {
-      const addedItem = await service.addTask(newItem); // החזרת הפריט שנוסף מה-API
-      setTodos(prev => [...prev, addedItem]); // מוסיפים מיד ל-state
+      const addedItem = await service.addTask(newItem);
+      setTodos(prev => [...prev, addedItem]);
       setNewTodo("");
     } catch (err) {
       console.error("Failed to add todo:", err);
@@ -60,8 +59,10 @@ function TodoPage() {
 
   async function updateCompleted(todo, isComplete) {
     try {
-      await service.setCompleted(todo.id, isComplete);
-      await getTodos();
+      await service.setCompleted(todo.Id, isComplete);
+      setTodos(prev =>
+        prev.map(t => (t.Id === todo.Id ? { ...t, IsComplete: isComplete } : t))
+      );
     } catch (err) {
       console.error("Failed to update todo:", err);
     }
@@ -70,7 +71,7 @@ function TodoPage() {
   async function deleteTodo(id) {
     try {
       await service.deleteTask(id);
-      setTodos(prev => prev.filter(t => t.id !== id));
+      setTodos(prev => prev.filter(t => t.Id !== id));
     } catch (err) {
       console.error("Failed to delete todo:", err);
     }
@@ -123,16 +124,16 @@ function TodoPage() {
         <ul className="todo-list">
           {Array.isArray(todos) && todos.length > 0 ? (
             todos.map(todo => (
-              <li className={todo.isComplete ? "completed" : ""} key={todo.id}>
+              <li className={todo.IsComplete ? "completed" : ""} key={todo.Id}>
                 <div className="view">
                   <input
                     className="toggle"
                     type="checkbox"
-                    checked={todo.isComplete}
+                    checked={todo.IsComplete}
                     onChange={(e) => updateCompleted(todo, e.target.checked)}
                   />
-                  <label>{todo.name}</label>
-                  <button className="destroy" onClick={() => deleteTodo(todo.id)}></button>
+                  <label>{todo.Name}</label>
+                  <button className="destroy" onClick={() => deleteTodo(todo.Id)}></button>
                 </div>
               </li>
             ))

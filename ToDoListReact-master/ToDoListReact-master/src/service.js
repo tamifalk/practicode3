@@ -1,14 +1,11 @@
 import axios from 'axios';
 
-axios.defaults.baseURL = "process.env.REACT_APP_API_URL"; // ← כתובת השרת שלך
+axios.defaults.baseURL = process.env.REACT_APP_API_URL; 
 axios.defaults.headers.post["Content-Type"] = "application/json";
 
-// 🔹 Interceptors לניהול token ו־שגיאות
 axios.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
@@ -28,30 +25,31 @@ axios.interceptors.response.use(
   }
 );
 
-// 🔹 פונקציות API
 export default {
   getTasks: async () => {
     const result = await axios.get("/tasks");
     return result.data;
   },
 
-  addTask: async (name) => {
-    const result = await axios.post("/tasks", { name, isComplete: false });
+  addTask: async (item) => {
+    const result = await axios.post("/tasks", { 
+      Name: item.Name || item.name, 
+      IsComplete: false
+    });
     return result.data;
   },
 
   setCompleted: async (id, isComplete) => {
-    const todos = await axios.get(`/tasks`);
-    const task = todos.data.find(t => t.id === id);
+    const result = await axios.get(`/tasks`);
+    const task = result.data.find(t => t.Id === id);
     if (!task) {
       console.error("⚠️ משימה לא נמצאה!");
       return;
     }
-    await axios.put(`/tasks/${id}`, { ...task, isComplete });
+    await axios.put(`/tasks/${id}`, { ...task, IsComplete: isComplete });
   },
 
   deleteTask: async (id) => {
-    const result = await axios.delete(`/tasks/${id}`);
-    return result.data;
+    await axios.delete(`/tasks/${id}`);
   },
 };
