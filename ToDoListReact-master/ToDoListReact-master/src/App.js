@@ -36,29 +36,44 @@ function TodoPage() {
   async function getTodos() {
     try {
       const result = await service.getTasks();
-      // ודאי שזה מערך
       setTodos(Array.isArray(result) ? result : []);
     } catch (err) {
       console.error("Failed to fetch todos:", err);
-      setTodos([]); // במקרה של שגיאה
+      setTodos([]);
     }
   }
 
   async function createTodo(e) {
     e.preventDefault();
-    await service.addTask(newTodo);
-    setNewTodo("");
-    await getTodos();
+
+    if (!newTodo.trim()) return;
+
+    const newItem = { name: newTodo }; // שולחים אובייקט עם שדה name
+    try {
+      const addedItem = await service.addTask(newItem); // החזרת הפריט שנוסף מה-API
+      setTodos(prev => [...prev, addedItem]); // מוסיפים מיד ל-state
+      setNewTodo("");
+    } catch (err) {
+      console.error("Failed to add todo:", err);
+    }
   }
 
   async function updateCompleted(todo, isComplete) {
-    await service.setCompleted(todo.id, isComplete);
-    await getTodos();
+    try {
+      await service.setCompleted(todo.id, isComplete);
+      await getTodos();
+    } catch (err) {
+      console.error("Failed to update todo:", err);
+    }
   }
 
   async function deleteTodo(id) {
-    await service.deleteTask(id);
-    await getTodos();
+    try {
+      await service.deleteTask(id);
+      setTodos(prev => prev.filter(t => t.id !== id));
+    } catch (err) {
+      console.error("Failed to delete todo:", err);
+    }
   }
 
   function logout() {
@@ -91,6 +106,7 @@ function TodoPage() {
       >
         Logout
       </button>
+
       <header className="header">
         <h1>todos</h1>
         <form onSubmit={createTodo} style={{ marginTop: '2rem' }}>
@@ -102,6 +118,7 @@ function TodoPage() {
           />
         </form>
       </header>
+
       <section className="main" style={{ display: 'block' }}>
         <ul className="todo-list">
           {Array.isArray(todos) && todos.length > 0 ? (
@@ -111,7 +128,7 @@ function TodoPage() {
                   <input
                     className="toggle"
                     type="checkbox"
-                    defaultChecked={todo.isComplete}
+                    checked={todo.isComplete}
                     onChange={(e) => updateCompleted(todo, e.target.checked)}
                   />
                   <label>{todo.name}</label>
