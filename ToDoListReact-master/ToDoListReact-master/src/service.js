@@ -43,7 +43,7 @@ export default {
       IsComplete: item.IsComplete ?? false
     });
     const data = result.data;
-     console.log("Added task response:", data);
+     
     return {
       Id: data.id,
       Name: data.name,

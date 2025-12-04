@@ -8,8 +8,6 @@ function Register({ onLogin }) {
   const [error, setError] = useState(""); // state חדש לשגיאות
   const navigate = useNavigate();
 
-  console.log("API URL:", process.env.REACT_APP_API_URL);
-
   async function handleRegister(e) {
     e.preventDefault();
 
