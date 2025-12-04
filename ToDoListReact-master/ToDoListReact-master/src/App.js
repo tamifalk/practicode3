@@ -34,8 +34,14 @@ function TodoPage() {
   const navigate = useNavigate();
 
   async function getTodos() {
-    const todos = await service.getTasks();
-    setTodos(todos);
+    try {
+      const result = await service.getTasks();
+      // ודאי שזה מערך
+      setTodos(Array.isArray(result) ? result : []);
+    } catch (err) {
+      console.error("Failed to fetch todos:", err);
+      setTodos([]); // במקרה של שגיאה
+    }
   }
 
   async function createTodo(e) {
@@ -98,20 +104,24 @@ function TodoPage() {
       </header>
       <section className="main" style={{ display: 'block' }}>
         <ul className="todo-list">
-          {todos.map(todo => (
-            <li className={todo.isComplete ? "completed" : ""} key={todo.id}>
-              <div className="view">
-                <input
-                  className="toggle"
-                  type="checkbox"
-                  defaultChecked={todo.isComplete}
-                  onChange={(e) => updateCompleted(todo, e.target.checked)}
-                />
-                <label>{todo.name}</label>
-                <button className="destroy" onClick={() => deleteTodo(todo.id)}></button>
-              </div>
-            </li>
-          ))}
+          {Array.isArray(todos) && todos.length > 0 ? (
+            todos.map(todo => (
+              <li className={todo.isComplete ? "completed" : ""} key={todo.id}>
+                <div className="view">
+                  <input
+                    className="toggle"
+                    type="checkbox"
+                    defaultChecked={todo.isComplete}
+                    onChange={(e) => updateCompleted(todo, e.target.checked)}
+                  />
+                  <label>{todo.name}</label>
+                  <button className="destroy" onClick={() => deleteTodo(todo.id)}></button>
+                </div>
+              </li>
+            ))
+          ) : (
+            <li>No tasks found</li>
+          )}
         </ul>
       </section>
     </section>
