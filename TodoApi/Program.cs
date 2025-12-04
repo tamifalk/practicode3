@@ -146,15 +146,24 @@ string GenerateJwtToken(string username, int userId)
 // Register
 app.MapPost("/register", async (ToDoDbContext db, User user) =>
 {
-    var existingUser = await db.Users.FirstOrDefaultAsync(u => u.Username == user.Username);
-    if (existingUser != null)
-        return Results.BadRequest(new { message = "שם המשתמש כבר קיים במערכת" });
+    try
+    {
+        var existingUser = await db.Users.FirstOrDefaultAsync(u => u.Username == user.Username);
+        if (existingUser != null)
+            return Results.BadRequest(new { message = "שם המשתמש כבר קיים במערכת" });
 
-    db.Users.Add(user);
-    await db.SaveChangesAsync();
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+        Console.WriteLine($"User saved with ID {user.Id}");
 
-    var token = GenerateJwtToken(user.Username, user.Id);
-    return Results.Ok(new { token });
+        var token = GenerateJwtToken(user.Username, user.Id);
+        return Results.Ok(new { token });
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"DB Error: {ex.Message}");
+        throw;
+    }
 });
 
 // Login
