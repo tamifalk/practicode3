@@ -59,7 +59,8 @@ function TodoPage() {
 
   async function updateCompleted(todo, isComplete) {
     try {
-      await service.setCompleted(todo.Id, isComplete);
+      // עכשיו שולחים גם את השם של המשימה
+      await service.setCompleted(todo.Id, isComplete, todo.Name);
       setTodos(prev =>
         prev.map(t => (t.Id === todo.Id ? { ...t, IsComplete: isComplete } : t))
       );

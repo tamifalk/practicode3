@@ -28,25 +28,33 @@ axios.interceptors.response.use(
 export default {
   getTasks: async () => {
     const result = await axios.get("/tasks");
-    return result.data;
+    // מחזירים תמיד אותיות גדולות
+    return result.data.map(task => ({
+      Id: task.Id,
+      Name: task.Name,
+      IsComplete: task.IsComplete ?? false
+    }));
   },
 
   addTask: async (item) => {
     const result = await axios.post("/tasks", { 
-      Name: item.Name || item.name, 
-      IsComplete: false
+      Name: item.Name,
+      IsComplete: item.IsComplete ?? false
     });
-    return result.data;
+    const data = result.data;
+    return {
+      Id: data.Id,
+      Name: data.Name,
+      IsComplete: data.IsComplete ?? false
+    };
   },
 
-  setCompleted: async (id, isComplete) => {
-    const result = await axios.get(`/tasks`);
-    const task = result.data.find(t => t.Id === id);
-    if (!task) {
-      console.error("⚠️ משימה לא נמצאה!");
-      return;
-    }
-    await axios.put(`/tasks/${id}`, { ...task, IsComplete: isComplete });
+  setCompleted: async (id, isComplete, name) => {
+    // שולחים רק את השדות שהשרת מצפה להם
+    await axios.put(`/tasks/${id}`, { 
+      Name: name, 
+      IsComplete: isComplete
+    });
   },
 
   deleteTask: async (id) => {
