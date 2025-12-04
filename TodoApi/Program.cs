@@ -25,7 +25,8 @@ builder.Services.AddCors(options =>
                              "http://localhost:3001"
                           ) // כתובת הקליינט שלך
                                 .AllowAnyHeader()
-                                .AllowAnyMethod();
+                                .AllowAnyMethod()
+                                .AllowCredentials();
                       });
 });
 
